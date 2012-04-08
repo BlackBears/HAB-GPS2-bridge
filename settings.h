@@ -12,16 +12,13 @@
 #include "global.h"
 #include <inttypes.h>
 
-#define DEFAULT_DEBUG_MODE 1
-#define DEFAULT_PWR_ON_DX_COUNT 3
-
 typedef struct {
-	uint8_t did_initialize;
 	uint8_t debug_mode;
 	uint8_t pwr_on_dx_count;
 	uint8_t error_dx_count;
 } settings_record_t;
 
+settings_record_t EEMEM eeprom_settings = {1,3,2};
 volatile settings_record_t global_settings;
 
 void settings_read(void);

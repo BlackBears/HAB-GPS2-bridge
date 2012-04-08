@@ -57,7 +57,7 @@ unsigned char outbuffer[2];
 
 int main(void) {
 	settings_read();
-	if( IS_DEBUGGING ) {
+	if( global_settings.debug_mode == 1 ) {
 		DDRD |= (1<<PD2);
 		blink(global_settings.pwr_on_dx_count);
 		_delay_ms(100);
