@@ -83,7 +83,7 @@ int main(void) {
 			}
 			opcode_process(outbuffer[0]);
 			
-			TWI_Start_Transceiver_With_Data(outbuffer, 1); 
+			//TWI_Start_Transceiver_With_Data(outbuffer, 1); 
 		}
 	} 
 }   /*  main */
