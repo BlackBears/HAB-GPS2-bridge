@@ -66,7 +66,7 @@ int main(void) {
 		_delay_ms(100);
 	}
 	
-	//serial_init();
+	serial_init();
 	
 	TWI_slaveAddress = I2C_SLAVE_ADDRESS;
 	
