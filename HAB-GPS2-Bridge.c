@@ -10,10 +10,14 @@
 
 #include "global.h"
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <util/setbaud.h>
 #include "gps.h"
-//#include "settings.h"
+#include "settings.h"
+
+#undef TRUE
+#undef FALSE
 #include "TWI_slave.h"
 
 
@@ -53,19 +57,18 @@ unsigned char outbuffer[2];
 
 int main(void) {
 	settings_read();
-	IF( IS_DEBUGGING ) {
+	if( IS_DEBUGGING ) {
 		DDRD |= (1<<PD2);
 		blink(global_settings.pwr_on_dx_count);
 		_delay_ms(100);
 	}
 	
-	serial_init();
+	//serial_init();
 	
 	TWI_slaveAddress = I2C_SLAVE_ADDRESS;
 	
 	// Initialise TWI module for slave operation. Include address and/or enable General Call.
 	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
-	
 	
 	sei();
 	
@@ -76,13 +79,13 @@ int main(void) {
 		{
 			if( TWI_statusReg.RxDataInBuf )
 			{
-				TWI_Get_Data_From_Transceiver(outbuffer, 2);  
+				TWI_Get_Data_From_Transceiver(outbuffer, 1);  
 			}
 			opcode_process(outbuffer[0]);
 			
-			TWI_Start_Transceiver_With_Data(outbuffer, 2); 
+			TWI_Start_Transceiver_With_Data(outbuffer, 1); 
 		}
-  } 
+	} 
 }   /*  main */
 
 
@@ -149,7 +152,7 @@ void serial_init()
 
 ISR(USART_RX_vect) {
 	char serial_data = UDR0;
-	appendChar(serial_data);
+	appendCharacter(serial_data);
 }
 
 void blink(uint8_t count)
