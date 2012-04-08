@@ -46,64 +46,26 @@ void blink(uint8_t count);
 void opcode_process(unsigned char opcode );
 void serial_init();
 
-/*
-int main(void)
-{
-	//settings_read();
-	
-	
-		DDRD |= (1<<PD2);
-	
-		blink(6);
-		_delay_ms(500);
-	
-	//serial_init();
-	
-    unsigned char TWI_slaveAddress = I2C_SLAVE_ADDRESS;
-	
-	// Initialise TWI module for slave operation. Include address and/or enable General Call.
-	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
-	
-	sei();
-	
-	TWI_Start_Transceiver(); 
-	
-    while(1) {
-		if( !TWI_Transceiver_Busy() )                              
-		{
-			if( TWI_statusReg.RxDataInBuf )
-			{
-				TWI_Get_Data_From_Transceiver(outbuffer, 2);  
-			}
-			if( outbuffer[0] == 0x02 ) {
-				outbuffer[1] = 0xAA;
-			}
-			else 
-				outbuffer[1] = 0xBB;
-			
-			TWI_Start_Transceiver_With_Data(outbuffer, 2); 
-		}
-  } 
- 
-}
-*/
 unsigned char messageBuf[TWI_BUFFER_SIZE];
 unsigned char TWI_slaveAddress;
 unsigned char temp;
 unsigned char outbuffer[2];
 
 int main(void) {
+	settings_read();
+	IF( IS_DEBUGGING ) {
+		DDRD |= (1<<PD2);
+		blink(global_settings.pwr_on_dx_count);
+		_delay_ms(100);
+	}
 	
+	serial_init();
 	
 	TWI_slaveAddress = I2C_SLAVE_ADDRESS;
 	
 	// Initialise TWI module for slave operation. Include address and/or enable General Call.
 	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
 	
-    DDRD |= (1<<PD2);
-	
-	blink(10);
-	_delay_ms(1000);
 	
 	sei();
 	
@@ -116,11 +78,7 @@ int main(void) {
 			{
 				TWI_Get_Data_From_Transceiver(outbuffer, 2);  
 			}
-			if( outbuffer[0] == 0x02 ) {
-				outbuffer[1] = 0xAA;
-			}
-			else 
-				outbuffer[1] = 0xBB;
+			opcode_process(outbuffer[0]);
 			
 			TWI_Start_Transceiver_With_Data(outbuffer, 2); 
 		}
@@ -182,18 +140,16 @@ void serial_init()
 	/* Set the baud rate */
 	UBRR0H = UBRRH_VALUE;
 	UBRR0L = UBRRL_VALUE;
-	/* set the framing to 8N1 */
-	UCSR0C = (3 << UCSZ00);
-	/* Engage! */
-	UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+	UCSR0C = (3 << UCSZ00);		//	8N1
+	UCSR0B = (1 << RXEN0) | (1 << TXEN0);	//	enable RX and TX circuitry
+	UCSR0B = (1 << RXCIE0 );	//	enable USART receive interrupt
+	
 	return;
 }
 
-unsigned char serial_read(void)
-{
-	while( !(UCSR0A & (1 << RXC0)) )
-		;
-	return UDR0;
+ISR(USART_RX_vect) {
+	char serial_data = UDR0;
+	appendChar(serial_data);
 }
 
 void blink(uint8_t count)
