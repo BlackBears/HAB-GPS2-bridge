@@ -11,6 +11,7 @@
 
 #include "global.h"
 #include <inttypes.h>
+#include <avr/eeprom.h>
 
 typedef struct {
 	uint8_t debug_mode;
@@ -18,7 +19,6 @@ typedef struct {
 	uint8_t error_dx_count;
 } settings_record_t;
 
-settings_record_t EEMEM eeprom_settings = {1,3,2};
 volatile settings_record_t global_settings;
 
 void settings_read(void);
