@@ -83,11 +83,9 @@ int main(void) {
 			if( TWI_statusReg.RxDataInBuf )
 			{
 				TWI_Get_Data_From_Transceiver(outbuffer, 2);  
-			}
+			}	/*	data in TWI status reg */
 			opcode_process(outbuffer[0]);
-			
-			//TWI_Start_Transceiver_With_Data(outbuffer, 2); 
-		}
+		}	/* TWI interfance not busy */
 	} 
 }   /*  main */
 
@@ -137,11 +135,10 @@ void opcode_process(unsigned char opcode ) {
 			outbuffer[0] = I2C_ERROR;
 			outbuffer[1] = I2C_ERROR;
 			TWI_Start_Transceiver_With_Data(outbuffer,2);
-			//TWI_Start_Transceiver_With_Data(outbuffer, 1); 
 			break;
 	}	/* opcode switch */
-	//if( IS_DEBUGGING && error)
-		//blink(global_settings.error_dx_count);
+	if( IS_DEBUGGING && error)
+		blink(global_settings.error_dx_count);
 }	/*	processOpcode()	*/
 
 
@@ -150,16 +147,16 @@ void serial_init()
 	/* Set the baud rate */
 	UBRR0H = UBRRH_VALUE;
 	UBRR0L = UBRRL_VALUE;
-	UCSR0C = (3 << UCSZ00);		//	8N1
+	UCSR0C = (3 << UCSZ00);					//	8N1
 	UCSR0B = (1 << RXEN0) | (1 << TXEN0);	//	enable RX and TX circuitry
-	UCSR0B = (1 << RXCIE0 );	//	enable USART receive interrupt
+	UCSR0B = (1 << RXCIE0 );				//	enable USART receive interrupt
 	
 	return;
 }
 
 ISR(USART_RX_vect) {
-	char serial_data = UDR0;
-	appendCharacter(serial_data);
+	char serial_data = UDR0;		//	get incoming character from UDR0
+	appendCharacter(serial_data);	//	append char to NMEA stream
 }
 
 void blink(uint8_t count)
@@ -173,6 +170,9 @@ void blink(uint8_t count)
 }
 
 #else
+
+//	This can be deleted once we've fully debugged
+//
 
 #ifndef F_CPU
 #define F_CPU 14745600L
