@@ -8,6 +8,7 @@
 #define PRODUCTION_VERSION 1
 
 #if PRODUCTION_VERSION
+
 /*	ETREX LEGEND GPS COMMUNICATES AT 4800 BAUD	*/
 #define BAUD 4800
 
@@ -22,8 +23,6 @@
 #undef TRUE
 #undef FALSE
 #include "TWI_slave.h"
-
-
 
 #define I2C_SLAVE_ADDRESS   	0xA0	//	we will listen on this address
 #define I2C_DEBUG_CONFIRM_BYTE	0xF0	//	this byte is returned when debug mode is changed
