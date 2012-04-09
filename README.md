@@ -45,4 +45,19 @@ This device responds to the following operation codes:
 Returns the velocity in knots as a single byte.
 
 #### LAT 0x40 ####
-Returns the current latitude as four bytes: degrees, minutes, seconds, and direction.  
+Returns the current latitude as four bytes: degrees, minutes, seconds, and direction.  The `direction` member for latitude is `DIR_NORTH` for north latitudes and `DIR_SOUTH` for south latitudes.  
+
+#### LON 0x41 ####
+Returns the current longitude as four bytes: degrees, minutes, seconds, and direction.  The `direction` member for longitude is `DIR_EAST` or `DIR_WEST`.
+
+#### FIX_TIME 0x50 ####
+Returns the time for the current fix as as `fix_time_t` object expressed in three bytes for `hour`, `minute`, `second`.
+
+#### DEBUG_ON 0x60 ####
+Turns debugging on.  This enables display of visual data at PB2.  Returns `I2C_DEBUG_CONFIRM_BYTE`
+
+#### DEBUG_OFF 0x61 ####
+Turns off debugging.  Returns `I2C_DEBUG_CONFIRM_BYTE`.
+
+#### TEST 0x02	####
+Flashes diagnostic LED for testing purposes.
