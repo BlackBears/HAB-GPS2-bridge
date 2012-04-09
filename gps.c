@@ -5,6 +5,25 @@
  *  Author: Owner
  */ 
 
+/*
+	RMC - NMEA has its own version of essential gps pvt (position, velocity, time) data. It is called RMC, The Recommended Minimum, which will look similar to:
+
+	$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
+
+	Where:
+		 RMC          Recommended Minimum sentence C
+		 123519       Fix taken at 12:35:19 UTC
+		 A            Status A=active or V=Void.
+		 4807.038,N   Latitude 48 deg 07.038' N
+		 01131.000,E  Longitude 11 deg 31.000' E
+		 022.4        Speed over the ground in knots
+		 084.4        Track angle in degrees True
+		 230394       Date - 23rd of March 1994
+		 003.1,W      Magnetic Variation
+		 *6A          The checksum data, always begins with *
+	Note that, as of the 2.3 release of NMEA, there is a new field in the RMC sentence at the end just prior to the checksum.
+*/
+
 #include "gps.h"
 
 #include <string.h>
@@ -65,9 +84,10 @@ BOOL appendCharacter(unsigned char c) {
                 gps_validity_data.isValid = 0;
 				buffer_index = 0;
     			buffer[0] = '\0';
-                return 0;
+                //return 0;
             }   /*  check for valid data */
-            gps_validity_data.isValid = 1;
+			else
+				gps_validity_data.isValid = 1;
             
             //  obtain the time in UTC
            
@@ -195,6 +215,34 @@ BOOL appendCharacter(unsigned char c) {
             
             	free(velocity_str);
             }            
+			
+			//	parse the date - note that the date is internally maintained
+			//	and is reported by the GPS even when it has no satellite connection
+
+			len = strlen(parts[RMC_DATE_INDEX]);
+			if( len == 0 ) {
+				gps_data.date.year = GPS_DATA_INVALID;
+				gps_data.date.month = GPS_DATA_INVALID;
+				gps_data.date.day = GPS_DATA_INVALID;
+			}	
+			else {
+				char *yr_str = (char *)malloc(2);
+				char *month_str = (char *)malloc(2);
+				char *day_str = (char *)malloc(2);
+				
+				strncpy(yr_str,parts[RMC_DATE_INDEX],2);
+				strncpy(month_str,parts[RMC_DATE_INDEX]+2,2);
+				strncpy(day_str,parts[RMC_DATE_INDEX]+4,2);
+				
+				gps_data.date.year = atoi(yr_str);
+				gps_data.date.month = atoi(month_str);
+				gps_data.date.day = atoi(day_str);
+				
+				free(yr_str);
+				free(month_str);
+				free(day_str);
+			}			
+
         }   /*  $GPR line */
         
         //	at the end of line, we can reset our buffer
