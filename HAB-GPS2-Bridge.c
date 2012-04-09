@@ -33,10 +33,10 @@
 #define VEL_KTS     0x20    //  velocity in knots
 #define LAT			0x40	//	return 4 bytes representing the latitude
 #define LON			0x41	//	return 4 bytes representing the longitude
-#define FIX_TIME	0x50	//	return the time of the most recent fix
-#define DEBUG_ON	0x60	//	turn on debugging mode
-#define DEBUG_OFF	0x61	//	turn off debugging mode
-#define TEST		0x02	//	flash the test LED
+#define FIX_TIME	0x50	//	return the time of the most recent fix, returns 3 bytes
+#define DEBUG_ON	0x60	//	turn on debugging mode, returns I2C_DEBUG_CONFIRM_BYTE
+#define DEBUG_OFF	0x61	//	turn off debugging mode, returns I2C_DEBUG_CONFIRM_BYTE
+#define TEST		0x02	//	flash the test LED, returns I2C_DEBUG_CONFIRM_BYTE
 
 
 /*
@@ -335,7 +335,7 @@ void opcode_process(unsigned char opcode ) {
 			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
 			TWI_Start_Transceiver_With_Data(outbuffer, 1);
 			break;
-		case 0x02:
+		case TEST:
 			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
 			TWI_Start_Transceiver_With_Data(outbuffer,1);
 			break;
