@@ -5,7 +5,7 @@ This application is a component of HAB, the high-altitude balloon flight control
 ## Target MCU ##
 This code has been tested on an ATmega 328 AVR; but the code is compact enough to work with controllers with less flash memory - such as an ATmega 48 or ATmega 88.  The optimized code is just under 4K; so an ATmega 48 may work acceptably.
 
-To reduce the USART error, the clock frequency should be:
+To [reduce the USART error](http://electronics.stackexchange.com/questions/5850/how-critical-are-uart-frequencies), the clock frequency should be:
 
 * 1.8432 MHz
 * 3.6864 MHz
