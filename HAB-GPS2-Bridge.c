@@ -81,18 +81,18 @@ int main(void) {
 	TWI_Start_Transceiver( ); 
 	
     while(1) {
-		if( !TWI_Transceiver_Busy() )                              
-		{
-			if( TWI_statusReg.RxDataInBuf )
-			{
+		if( !TWI_Transceiver_Busy() ) {
+			if( TWI_statusReg.RxDataInBuf ) {
 				TWI_Get_Data_From_Transceiver(&temp, 1);  
-				//opcode_process(inbuffer[0]);
 				
 			}	//	data in TWI status reg
-			//temp += 1;
-			//TWI_Start_Transceiver_With_Data(&temp,1);
 			opcode_process(temp);
-		}	// TWI interfance not busy
+		}	// TWI interface not busy
+		
+		//  process GPS data as needed
+		if( gps_has_complete_sentence() ) {
+		    gps_process_sentence();
+		}
 	} 
 }   /*  main */
 

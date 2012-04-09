@@ -55,8 +55,10 @@ typedef struct {
 gps_data_t gps_data;
 gps_validity_data_t gps_validity_data;
 
-BOOL appendCharacter(unsigned char c);
-
+void gps_init();
+BOOL gps_append_char(unsigned char c);
+BOOL gps_has_complete_sentence();
+void gps_process_sentence();
 
 
 #endif /* GPS_H_ */
