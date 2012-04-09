@@ -174,9 +174,9 @@ void serial_init()
 
 ISR(USART_RX_vect) {
 	char serial_data = UDR0;		//	get incoming character from UDR0
-	if( serial_data == 0x0D )
+	if( serial_data == 0x0D && (IS_DEBUGGING) )
 		PORTD ^= (1<<PD2);
-	appendCharacter(serial_data);	//	append char to NMEA stream
+	gps_append_char(serial_data);	//	append char to NMEA stream
 }
 
 void blink(uint8_t count)
