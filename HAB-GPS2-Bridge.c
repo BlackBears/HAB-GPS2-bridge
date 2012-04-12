@@ -29,7 +29,12 @@
 /*  OPCODES FOR OUR I2C INTERFACE */
 
 #define VALID_CODE	0x10	//	A if valid, V if invalid
-#define VEL_KTS     0x20    //  velocity in knots
+#define E_W_DIR     0x20    //  East-West direction (1 char "E" or "W"
+#define E_W_VEL     0x21    //  East_West velocity (2 bytes u16 in m/s * 100 )
+#define N_S_DIR     0x22    //  North-South direction (1 char "N" or "S")
+#define N_S_VEL     0x22    //  North-South velocity (2 bytes u16 in m/s * 100)
+#define VERT_DIR    0x23    //  vertical velocity (1 char "U" or "D")
+#define VERT_VEL    0x24    //  vertical velocity (2 bytes u16 in m/s *10)
 #define LAT			0x40	//	return 4 bytes representing the latitude
 #define LON			0x41	//	return 4 bytes representing the longitude
 #define FIX_TIME	0x50	//	return the time of the most recent fix, returns 3 bytes
@@ -141,10 +146,33 @@ void opcode_process(unsigned char opcode ) {
 			outbuffer[2] = gps_data.time.day;
 			TWI_Start_Transceiver_With_Data(outbuffer,3);
 			break;
-		case VEL_KTS:
-			outbuffer[0] = gps_data.e_w_velocity.magnitude;
+		case E_W_DIR:
+			outbuffer[0] = gps_data.e_w_velocity.direction;
 			TWI_Start_Transceiver_With_Data(outbuffer, 1); 
 			break;
+		case E_W_VEL:
+		    outbuffer[0] = (gps_data.e_w_velocity.magnitude >> 8);
+		    outbuffer[1] = gps_data.e_w_velocity.magnitude;
+		    TWI_Start_Transceiver_With_Data(outbuffer,2);
+		    break;
+		case N_S_DIR:
+		    outbuffer[0] = gps_data.n_s_velocity.direction;
+		    TWI_Start_Transceiver_With_Data(outbuffer, 1); 
+		    break;
+		case N_S_VEL:
+		    outbuffer[0] = (gps_data.n_s_velocity.magnitude >> 8);
+		    outbuffer[1] = gps_data.n_s_velocity.magnitude;
+		    TWI_Start_Transceiver_With_Data(outbuffer,2);
+		    break;
+		case VERT_DIR:
+		    outbuffer[0] = gps_data.vert_velocity.direction;
+			TWI_Start_Transceiver_With_Data(outbuffer, 1); 
+			break;
+		case VERT_VEL:
+		    outbuffer[0] = (gps_data.vert_velocity.magnitude >> 8);
+		    outbuffer[1] = gps_data.vert_velocity.magnitude;
+		    TWI_Start_Transceiver_With_Data(outbuffer,2);
+		    break;
 		case DEBUG_ON:
 			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
 			TWI_Start_Transceiver_With_Data(outbuffer, 1);
