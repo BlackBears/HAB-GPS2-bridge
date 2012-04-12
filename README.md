@@ -22,15 +22,12 @@ The settings files provide persistent settings functionality for the application
 
 
 ### gps.h/.c ###
-The gps file mainly takes care of parsing the NMEA strings from the GPS.  Currently, it provides a limited amount of data.
+The gps file mainly takes care of parsing the Garmin text strings from the GPS.  Currently, it provides a limited amount of data.
 
 To access coordinates components (lat/long) use the `gps_data` structure like:
 
-    gps_data.latitude.degrees
+    gps_data.coordinate.latitude.degrees
 
-or
-
-    gps_data.latitude.minutes
 
 ### TWI_slave.h/.c ###
 The interface to the TWI/I2C bus.  This code is provided by Atmel.
@@ -41,17 +38,32 @@ The interface to the TWI/I2C bus.  This code is provided by Atmel.
 
 This device responds to the following operation codes:
 
-#### VEL_KTS  0x20 ####
-Returns the velocity in knots as a single byte.
+#### E_W_DIR  0x20 ####
+Returns the diretion of the East-West velocity vector as single byte character (E/W)
+
+#### E_W_VEL 0x21 ####
+Returns the magnitude of the East-West velocity vector as 2 bytes representing m/s * 100
+
+#### N_S_DIR 0x22 ####
+Returns the direction of North-South velocity vector as single character (N/S)
+
+#### N_S_VEL 0x23 ####
+Returns the magnitude of the North-South velocity vector as 2 bytes representing m/s * 100
+
+#### VERT_DIR 0x24 ####
+Returns the direction of the vertical velocity vector as single character (U/D)
+
+#### VERT_VEL 0x25 ####
+REturns the magnitude of the vertical velocity vector as 2 bytes representing m/s * 10
 
 #### LAT 0x40 ####
-Returns the current latitude as four bytes: degrees, minutes, seconds, and direction.  The `direction` member for latitude is `DIR_NORTH` for north latitudes and `DIR_SOUTH` for south latitudes.  
+Returns four bytes of data in the following order: direction (N/S), degrees, minutes, seconds.
 
 #### LON 0x41 ####
-Returns the current longitude as four bytes: degrees, minutes, seconds, and direction.  The `direction` member for longitude is `DIR_EAST` or `DIR_WEST`.
+Returns four bytes of data in the following order: direction (E/W), degrees, minutes, seconds.
 
 #### FIX_TIME 0x50 ####
-Returns the time for the current fix as as `fix_time_t` object expressed in three bytes for `hour`, `minute`, `second`.
+Returns the time for the current fix as as `fix_time_t` object expressed in six bytes for `year`, `month`, `day`, `hour`, `minute`, `second`.
 
 #### DEBUG_ON 0x60 ####
 Turns debugging on.  This enables display of visual data at PB2.  Returns `I2C_DEBUG_CONFIRM_BYTE`
