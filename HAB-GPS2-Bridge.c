@@ -32,9 +32,9 @@
 #define E_W_DIR     0x20    //  East-West direction (1 char "E" or "W"
 #define E_W_VEL     0x21    //  East_West velocity (2 bytes u16 in m/s * 100 )
 #define N_S_DIR     0x22    //  North-South direction (1 char "N" or "S")
-#define N_S_VEL     0x22    //  North-South velocity (2 bytes u16 in m/s * 100)
-#define VERT_DIR    0x23    //  vertical velocity (1 char "U" or "D")
-#define VERT_VEL    0x24    //  vertical velocity (2 bytes u16 in m/s *10)
+#define N_S_VEL     0x23    //  North-South velocity (2 bytes u16 in m/s * 100)
+#define VERT_DIR    0x24    //  vertical velocity (1 char "U" or "D")
+#define VERT_VEL    0x25    //  vertical velocity (2 bytes u16 in m/s *10)
 #define LAT			0x40	//	return 4 bytes representing the latitude
 #define LON			0x41	//	return 4 bytes representing the longitude
 #define FIX_TIME	0x50	//	return the time of the most recent fix, returns 3 bytes
