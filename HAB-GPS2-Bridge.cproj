@@ -66,6 +66,9 @@
     <Compile Include="avrlibtypes.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="common_types.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="global.h">
       <SubType>compile</SubType>
     </Compile>
@@ -88,6 +91,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="TWI_slave.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

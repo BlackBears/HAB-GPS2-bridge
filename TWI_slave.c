@@ -167,7 +167,6 @@ application.
 ISR(TWI_vect)
 {
   static unsigned char TWI_bufPtr;
-  
   switch (TWSR)
   {
     case TWI_STX_ADR_ACK:            // Own SLA+R has been received; ACK has been returned

@@ -5,20 +5,18 @@
  *  Author: Owner
  */ 
 
-#define PRODUCTION_VERSION 1
+#include "global.h"
 
-#if PRODUCTION_VERSION
 
 /*	ETREX LEGEND GPS COMMUNICATES AT 4800 BAUD	*/
-#define BAUD 4800
+#define UART_BAUD_RATE      4800  
 
-#include "global.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include <util/setbaud.h>
 #include "gps.h"
 #include "settings.h"
+#include "uart.h"
 
 #undef TRUE
 #undef FALSE
@@ -68,31 +66,41 @@ int main(void) {
 		blink(global_settings.pwr_on_dx_count);
 		_delay_ms(100);
 	}
-	
-	serial_init();
+	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) ); 
+	gps_init();
 	
 	TWI_slaveAddress = I2C_SLAVE_ADDRESS;
 	
 	// Initialise TWI module for slave operation. Include address and/or enable General Call.
 	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
-	
+		
 	sei();
 	
 	TWI_Start_Transceiver( ); 
 	
     while(1) {
+		char c = uart_getc();
+        if ( c & UART_NO_DATA ) {}
+        else {
+			if( c > 0x21 ) {
+				gps2_append_char(c);
+			}	/* not a control character */
+		}	/* data available in serial buffer */		
 		if( !TWI_Transceiver_Busy() ) {
 			if( TWI_statusReg.RxDataInBuf ) {
-				TWI_Get_Data_From_Transceiver(&temp, 1);  
-				
+				TWI_Get_Data_From_Transceiver(&temp, 2);  
 			}	//	data in TWI status reg
 			opcode_process(temp);
+			
+			/*
+			if( outbuffer[0] == 0x02 ) {
+				outbuffer[1] = 0xAA;
+			}
+			else 
+				outbuffer[1] = 0xBB;
+				*/
+
 		}	// TWI interface not busy
-		
-		//  process GPS data as needed
-		if( gps_has_complete_sentence() ) {
-		    gps_process_sentence();
-		}
 	} 
 }   /*  main */
 
@@ -108,17 +116,17 @@ void opcode_process(unsigned char opcode ) {
 			TWI_Start_Transceiver_With_Data(outbuffer,1);
 			break;
 		case LAT:
-			outbuffer[0] = gps_data.latitude.degrees;
-			outbuffer[1] = gps_data.latitude.minutes;
-			outbuffer[2] = gps_data.latitude.seconds;
-			outbuffer[3] = gps_data.latitude.direction;
+			outbuffer[0] = gps_data.coordinate.latitude.degree;
+			outbuffer[1] = gps_data.coordinate.latitude.minute;
+			outbuffer[2] = gps_data.coordinate.latitude.second;
+			outbuffer[3] = gps_data.coordinate.latitude.direction;
 			TWI_Start_Transceiver_With_Data(outbuffer, 4); 
 			break;
 		case LON:
-			outbuffer[0] = gps_data.longitude.degrees;
-			outbuffer[1] = gps_data.longitude.minutes;
-			outbuffer[2] = gps_data.longitude.seconds;
-			outbuffer[3] = gps_data.longitude.direction;
+			outbuffer[0] = gps_data.coordinate.longitude.degree;
+			outbuffer[1] = gps_data.coordinate.longitude.minute;
+			outbuffer[2] = gps_data.coordinate.longitude.second;
+			outbuffer[3] = gps_data.coordinate.longitude.direction;
 			TWI_Start_Transceiver_With_Data(outbuffer, 4); 
 			break;
 		case FIX_TIME:
@@ -128,13 +136,13 @@ void opcode_process(unsigned char opcode ) {
 			TWI_Start_Transceiver_With_Data(outbuffer, 3); 
 			break;
 		case FIX_DATE:
-			outbuffer[0] = gps_data.date.year;
-			outbuffer[1] = gps_data.date.month;
-			outbuffer[2] = gps_data.date.day;
+			outbuffer[0] = gps_data.time.year;
+			outbuffer[1] = gps_data.time.month;
+			outbuffer[2] = gps_data.time.day;
 			TWI_Start_Transceiver_With_Data(outbuffer,3);
 			break;
 		case VEL_KTS:
-			outbuffer[0] = gps_data.velocity;
+			outbuffer[0] = gps_data.e_w_velocity.magnitude;
 			TWI_Start_Transceiver_With_Data(outbuffer, 1); 
 			break;
 		case DEBUG_ON:
@@ -147,6 +155,7 @@ void opcode_process(unsigned char opcode ) {
 			break;
 		case TEST:
 			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
+			outbuffer[1] = I2C_DEBUG_CONFIRM_BYTE;
 			TWI_Start_Transceiver_With_Data(outbuffer,1);
 			//blink(2);
 			break;
@@ -161,24 +170,6 @@ void opcode_process(unsigned char opcode ) {
 		blink(global_settings.error_dx_count);
 }	/*	processOpcode()	*/
 
-
-void serial_init()
-{
-	blink(10);
-	/* Set the baud rate */
-	UBRR0H = UBRRH_VALUE;
-	UBRR0L = UBRRL_VALUE;
-	UCSR0B |= (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);    
-	UCSR0C |= (3 << UCSZ00); 
-}
-
-ISR(USART_RX_vect) {
-	char serial_data = UDR0;		//	get incoming character from UDR0
-	if( serial_data == 0x0D && (IS_DEBUGGING) )
-		PORTD ^= (1<<PD2);
-	gps_append_char(serial_data);	//	append char to NMEA stream
-}
-
 void blink(uint8_t count)
 {
 	for(uint8_t i = 0; i < count; i++) {
@@ -188,8 +179,3 @@ void blink(uint8_t count)
 		_delay_ms(50);
 	}
 }
-
-#else
-
-
-#endif
