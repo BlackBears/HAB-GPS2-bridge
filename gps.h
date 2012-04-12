@@ -63,8 +63,6 @@ gps_validity_data_t gps_validity_data;
 
 void gps_init();
 void gps2_append_char(unsigned char c);
-BOOL gps_has_complete_sentence();
-void gps_process_sentence();
 
 
 #endif /* GPS_H_ */
