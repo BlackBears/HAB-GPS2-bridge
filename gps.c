@@ -6,42 +6,13 @@
  */ 
 
 /*
-	RMC - NMEA has its own version of essential gps pvt (position, velocity, time) data. It is called RMC, The Recommended Minimum, which will look similar to:
 
-	$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
-
-	Where:
-		 RMC          Recommended Minimum sentence C
-		 123519       Fix taken at 12:35:19 UTC
-		 A            Status A=active or V=Void.
-		 4807.038,N   Latitude 48 deg 07.038' N
-		 01131.000,E  Longitude 11 deg 31.000' E
-		 022.4        Speed over the ground in knots
-		 084.4        Track angle in degrees True
-		 230394       Date - 23rd of March 1994
-		 003.1,W      Magnetic Variation
-		 *6A          The checksum data, always begins with *
-	Note that, as of the 2.3 release of NMEA, there is a new field in the RMC sentence at the end just prior to the checksum.
 */
 
 #include "gps.h"
-
 #include <string.h>
 #include <stdlib.h>
 
-#define RMC_RMC_START       0x00    //  GPRMC
-#define RMC_FIX_TIME        0x01    //  123519 12:35:19 UTC
-#define RMC_VALID_INDEX     0x02    //  A or V
-#define RMC_LAT_INDEX       0x03    //
-#define RMC_LAT_DIR_INDEX   0x04
-#define RMC_LON_INDEX       0x05
-#define RMC_LON_DIR_INDEX   0x06
-#define RMC_VEL_KTS_INDEX   0x07
-#define RMC_TRK_ANGEL_INDEX 0x08
-#define RMC_DATE_INDEX      0x09    //  230394 March 23, 1994
-#define RMC_MAG_VAR_INDEX   0x0A    //  003.1, 3.1 degrees
-#define RMC_MVAR_DIR_INDEX  0x0B    //  W/E
-#define RMC_CHECKSUM_INDEX  0x0C    //  *6A, always begins with *
 
 enum {
 	k_sentence_start,
@@ -55,21 +26,24 @@ enum {
 	k_vert_dir, k_vert_magnitude
 };
 
-char buffer[300];
-u08 buffer_index;
-BOOL _end_of_sentence;
+char buffer[100];   //  local store of GPS text
+u08 buffer_index;   //  location in buffer
+/*  widths of fields in Garmin GPS text output */
 u08 stops[] = {1,2,2,2,2,2,2,1,2,2,3,1,3,2,3,1,3,1,5,1,4,1,4,1,4};
 
 void gps_init() {
-    _end_of_sentence = 0;
 	buffer_index = 0;
 	buffer[0] = '\0';
 }
 
+#define DEBUG_FOR_ABSENT_GPS_FIX 1
+
 void gps2_append_char(unsigned char c) {
 	if( c == '@' ) {
 		if( buffer_index != 0 ) {
+		    #if DEBUG_FOR_ABSENT_GPS_FIX
 			strncpy(buffer,"@120607204655N6012249E01107556S015+00130E0021N0018U0000",55);
+			#endif
 			char *temp_str = (char *)malloc(4);
 			u08 index = 0;
 			for(u08 i = 0; i < 25; i++) {
@@ -147,20 +121,13 @@ void gps2_append_char(unsigned char c) {
 						gps_data.vert_velocity.magnitude = (temp_str[0] == '_')?GPS_DATA_INVALID_16:atoi(temp_str);
 						break;
 				}	/* switch parts */
-			}
-		}
+			}   /* iterate fields */
+		}   /* sentence buffer is full */
 		buffer[0] = c;
 		buffer_index = 1;
-	}
+	}   /*  @ character */
 	else {
 		buffer[buffer_index] = c;
 		buffer_index++;
-	}
-}
-
-BOOL gps_has_complete_sentence() {
-    if( buffer[buffer_index-1] == 0x0D ) {
-        _end_of_sentence = 1;
-    }
-    return _end_of_sentence;
-}
+	}   /*  not @ character */
+}   /* gps2_append_char */
