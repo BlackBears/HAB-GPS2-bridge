@@ -1,6 +1,57 @@
-This application is a component of HAB, the high-altitude balloon flight controller.  It provides a bridge between to incoming serial data from the backup GPS (an eTrex Legend) and the main flight computer's I2C bus.  Rather than use a larger MCU to provide more on-board USARTs, we chose a bridge.  Further the secondary control off-loads the NMEA parsing from the primary controller.
+This application is a component of HAB, the high-altitude balloon flight controller.  It provides a bridge between to incoming serial data from the backup GPS (an eTrex Legend) and the main flight computer's I2C bus.  Rather than use a larger MCU to provide more on-board USARTs, we chose a bridge.  Further the secondary control off-loads the GPS stream parsing from the primary controller.
 
----
+### Garmin Text Output Mode Description ###
+
+<table border=1>
+<tr>
+<th colspan=2>FIELD DESCRIPTION:</th><th>WIDTH:</th><th>NOTES:</th>
+</tr><tr>
+<td>&nbsp;</td><td>Sentence start</td><td>1</td><td>Always '@'</td>
+</tr><tr>
+<td rowspan=6 width=6><center>T<br>I<br>M<br>E<br></center></td>
+<td>Year</td><td>2</td><td>Last two digits of UTC year</td><tr>
+<td>Month</td><td>2</td><td>UTC month, "01".."12"</td><tr>
+<td>Day</td><td>2</td><td>UTC day of month, "01".."31"</td><tr>
+<td>Hour</td><td>2</td><td>UTC hour, "00".."23"</td><tr>
+<td>Minute</td><td>2</td><td>UTC minute, "00".."59"</td><tr>
+<td>Second</td><td>2</td><td>UTC second, "00".."59"</td><tr>
+
+<td rowspan=8 width=6><Center>P<br>O<br>S<br>I<br>T<br>I<br>O<br>N</center>
+</td>
+<td>Latitude hemisphere</td><td>1</td><td>'N' or 'S'</td><tr>
+<td>Latitude position</td><td>7</td><td>WGS84 ddmmmmm, with an implied
+                                        decimal after the 4th digit</td><tr>
+<td>Longitude hemishpere</td><td>1</td><td>'E' or 'W'</td><tr>
+<td>Longitude position</td><td>8</td><td>WGS84 dddmmmmm with an implied
+                                         decimal after the 5th digit</td><tr>
+<td>Position status</td><td>1</td><td>'d' if current 2D differential GPS 
+                                    position<br>
+                                    'D' if current 3D differential GPS 
+                                    position<br>
+                                    'g' if current 2D GPS position<br>
+                                    'G' if current 3D GPS position<br>
+                                    'S' if simulated position<br>
+                                    '_' if invalid position</td><tr>
+<td>Horizontal posn error</td><td>3</td><td>EPH in meters</td><tr>
+<td>Altitude sign</td><td>1</td><td>'+' or '-'</td><tr>
+<td>Altitude</td><td>5</td><td>Height above or below mean
+                                sea level in meters</td><tr>
+<td rowspan=6 width=6><center>V<br>E<br>L<br>O<br>C<br>I<br>T<br>Y</center>
+</td>
+<td>East/West velocity<br>direction</td><td>1</td><td>'E' or 'W'</td><tr>
+<td>East/West velocity<br>magnitude</td><td>4</td><td>
+Meters per second in tenths, ("1234" = 123.4 m/s)</td><tr>
+<td>North/South velocity<br>direction</td><td>1</td><td>'N' or 'S'</td><tr>
+<td>North/South velocity<br>magnitude</td><td>4</td><td>Meters
+per second in tenths, ("1234" = 123.4 m/s)</td><tr>
+<td>Vertical velocity<br>direction</td><td>1</td><td>'U' (up) or 'D' (down)
+</td><tr>
+<td>Vertical velocity<br>magnitude</td><td>4</td><td>Meters
+per second in hundredths, ("1234" = 12.34 m/s)</td><tr>
+<td>&nbsp;</td>
+<td>Sentence end</td><td>2</td><td>Carriage return, '0x0D', and
+                                    line feed, '0x0A'</td>
+</table>
 
 ## Target MCU ##
 This code has been tested on an ATmega 328 AVR; but the code is compact enough to work with controllers with less flash memory - such as an ATmega 48 or ATmega 88.  The optimized code is just under 4K; so an ATmega 48 may work acceptably.
