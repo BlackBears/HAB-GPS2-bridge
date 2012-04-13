@@ -8,7 +8,7 @@
 #include "settings.h"
 #include <avr/eeprom.h>
 
-settings_record_t EEMEM eeprom_settings = {1,3,2};
+settings_record_t EEMEM eeprom_settings = {1,3,2,0};
 	
 void settings_read(void) {
 	eeprom_read_block((void *)&global_settings, (const void *)&eeprom_settings, sizeof(settings_record_t));

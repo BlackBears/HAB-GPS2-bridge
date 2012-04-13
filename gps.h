@@ -91,7 +91,7 @@ gps_validity_data_t gps_validity_data;
 #define GPS_DATA_INVALID_16	0xFFFE
 
 /**
-    @brief  Initialize the backup GPS interface */
+    @brief  Initialize the backup GPS interface
 */
 void gps_init();
 
@@ -105,5 +105,7 @@ void gps_init();
 */
 void gps2_append_char(unsigned char c);
 
+void gps2_generate_diagnostic_data(void);
+void gps2_remove_diagnostic_data(void);
 
 #endif /* GPS_H_ */

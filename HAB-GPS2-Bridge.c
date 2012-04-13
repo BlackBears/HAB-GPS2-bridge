@@ -40,6 +40,8 @@
 
 #define DEBUG_ON	0x60	//	turn on debugging mode, returns I2C_DEBUG_CONFIRM_BYTE
 #define DEBUG_OFF	0x61	//	turn off debugging mode, returns I2C_DEBUG_CONFIRM_BYTE
+#define DX_MODE_ON	0x70	// turn on diagnostic mode (uses fake GPS data), returns I2C_DEBUG_CONFIRM_BYTE
+#define DX_MODE_OFF	0x71	// turn off diagnostic mode, returns I2C_DEBUG_CONFIRM_BYTE
 #define TEST		0x02	//	flash the test LED, returns I2C_DEBUG_CONFIRM_BYTE
 
 
@@ -50,19 +52,30 @@
 
 #define IS_DEBUGGING global_settings.debug_mode == 1
 
+BOOL should_write_settings;
+BOOL should_generate_diagnostic_data;
+BOOL did_change_dx_mode;
+BOOL dx_mode;
+
 /*	FUNCTION PROTOTYPES */
 void blink(uint8_t count);
 
 void opcode_process(unsigned char opcode );
 void serial_init();
+void dx_mode_setup(void);
 
 unsigned char messageBuf[TWI_BUFFER_SIZE];
 unsigned char TWI_slaveAddress;
 unsigned char temp;
-unsigned char outbuffer[4];
+unsigned char outbuffer[6];
 unsigned char inbuffer[2];
 
 int main(void) {
+	should_write_settings = FALSE;
+	should_generate_diagnostic_data = FALSE;
+	did_change_dx_mode = FALSE;
+	dx_mode = FALSE;
+	
 	settings_read();
 	
 	if( global_settings.debug_mode == 1 ) {
@@ -98,9 +111,43 @@ int main(void) {
 			opcode_process(temp);
 
 		}	// TWI interface not busy
-	} 
+		if( should_write_settings == TRUE ) {
+			//settings_write();
+			should_write_settings = FALSE;
+		}		
+		if( should_generate_diagnostic_data == TRUE ) {
+			should_generate_diagnostic_data = FALSE;	
+			gps2_generate_diagnostic_data();
+			PORTD ^= (1<<PD2);
+		}			
+		if( did_change_dx_mode == TRUE ) {
+			if( dx_mode == TRUE ) {
+				dx_mode_setup();
+				blink(2);
+			}	
+			else {
+				TIMSK1 &= ~(1<<TOIE1);
+				gps2_remove_diagnostic_data();
+				blink(7);
+			}
+			did_change_dx_mode = FALSE;
+		}			
+	} /* main loop */
 }   /*  main */
 
+void dx_mode_setup(void) {
+	TCCR1B |= (1<<CS10) | (1<<CS12);
+	TIMSK1 |= (1<<TOIE1);
+	TCNT1 = 0x8F7F;
+	sei();
+}
+
+ISR(TIMER1_OVF_vect) {
+	should_generate_diagnostic_data = TRUE;
+	DDRD |= (1<<PD2);
+	PORTD ^= (1<<PD2);
+	TCNT1 = 0x8F7F;
+}
 
 void opcode_process(unsigned char opcode ) {
 	BOOL error = 0;
@@ -168,6 +215,18 @@ void opcode_process(unsigned char opcode ) {
 			outbuffer[1] = I2C_DEBUG_CONFIRM_BYTE;
 			TWI_Start_Transceiver_With_Data(outbuffer,1);
 			//blink(2);
+			break;
+		case DX_MODE_ON:
+			dx_mode = TRUE;
+			did_change_dx_mode = TRUE;
+			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
+			TWI_Start_Transceiver_With_Data(outbuffer,1);
+			break;
+		case DX_MODE_OFF:
+			dx_mode = FALSE;
+			did_change_dx_mode = TRUE;
+			outbuffer[0] = I2C_DEBUG_CONFIRM_BYTE;
+			TWI_Start_Transceiver_With_Data(outbuffer,1);
 			break;
 		default: 
 			error = 1;

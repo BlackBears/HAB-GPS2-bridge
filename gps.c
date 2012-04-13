@@ -41,9 +41,9 @@ void gps_init() {
 void gps2_append_char(unsigned char c) {
 	if( c == '@' ) {
 		if( buffer_index != 0 ) {
-		    #if DEBUG_FOR_ABSENT_GPS_FIX
-			strncpy(buffer,"@120607204655N6012249E01107556S015+00130E0021N0018U0000",55);
-			#endif
+		    //#if DEBUG_FOR_ABSENT_GPS_FIX
+			//strncpy(buffer,"@120607204655N6012249E01107556S015+00130E0021N0018U0000",55);
+			//#endif
 			char *temp_str = (char *)malloc(4);
 			u08 index = 0;
 			for(u08 i = 0; i < 25; i++) {
@@ -54,6 +54,9 @@ void gps2_append_char(unsigned char c) {
 				switch(i) {
 					case k_year:
 						gps_data.time.year = (temp_str[0] == '_')?INVALID_DATA:atoi(temp_str);
+						//char pr_buffer[15];
+						//sprintf(pr_buffer,"Year 20%02d",gps_data.time.year);
+						//uart_puts(pr_buffer);
 						break;
 					case k_month:
 						gps_data.time.month = (temp_str[0] == '_')?INVALID_DATA:atoi(temp_str);
@@ -131,3 +134,16 @@ void gps2_append_char(unsigned char c) {
 		buffer_index++;
 	}   /*  not @ character */
 }   /* gps2_append_char */
+
+void gps2_generate_diagnostic_data(void) {
+	strncpy(buffer,"@120607204655N6012249E01107556S015+00130E0021N0018U0000",55);
+	buffer_index = 56;
+	PORTD ^= (1<<PD2);
+	gps2_append_char('@');
+}
+
+void gps2_remove_diagnostic_data(void) {
+	buffer[0] = '\0';
+	buffer_index = 0;
+	memset(&gps_data, sizeof(gps_data), INVALID_DATA);
+}
