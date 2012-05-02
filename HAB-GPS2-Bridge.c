@@ -128,7 +128,7 @@ int main(void) {
 			else {
 				TIMSK1 &= ~(1<<TOIE1);
 				gps2_remove_diagnostic_data();
-				blink(7);
+				blink(5);
 			}
 			did_change_dx_mode = FALSE;
 		}			
@@ -136,14 +136,14 @@ int main(void) {
 }   /*  main */
 
 void dx_mode_setup(void) {
-	TCCR1B |= (1<<CS10) | (1<<CS12);
-	TIMSK1 |= (1<<TOIE1);
-	TCNT1 = 0x8F7F;
+	TCCR1B |= (1<<CS10) | (1<<CS12);		//	pre-scaler @ /1024
+	TIMSK1 |= (1<<TOIE1);					//	timer overflow interrupt enable
+	TCNT1 = 0x8F7F;							//	timer pre-load value for about 0.5 Hz
 	sei();
 }
 
 ISR(TIMER1_OVF_vect) {
-	should_generate_diagnostic_data = TRUE;
+	should_generate_diagnostic_data = TRUE;		//	on overflow generate sample string
 	DDRD |= (1<<PD2);
 	PORTD ^= (1<<PD2);
 	TCNT1 = 0x8F7F;
